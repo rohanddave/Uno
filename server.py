@@ -49,12 +49,15 @@ class Server:
                     client.close()
                     self.list_of_clients.remove(client)'''
 
-    def update_player_cards(self,game):
+    def send_player_info(self,game):     # sends a list [player_obj , curr_card , msg] where msg = 'play' if that player's turn else msg = 'wait'
         for i in range(0, len(self.list_of_clients)):
-            message = pickle.dumps(game.players[i])
-            print(f"Type: {type(message)} pickle data:{message} END")
-            print(message)
-            self.list_of_clients[i].send(message)
+            msg = "play"
+            if self.curr_player != game.players[i]:
+                msg = "wait"
+            msg_list = [game.players[i] , game.curr_card , msg]
+            pickled_message = pickle.dumps(msg_list)
+            print(f"Type: {type(pickled_message)} pickle data:{pickled_message} END")
+            self.list_of_clients[i].send(pickled_message)
 
     def start_game(self):
         game = Game(self.list_of_clients)
@@ -62,11 +65,13 @@ class Server:
         circular_queue = Cq(game.players)
         timer = Timer()
         while True:  #main game loop
-            self.update_player_cards(game)
-            curr_player = circular_queue.next_player()
-            curr_player.is_turn = True
-            print(f"current player is {curr_player}")
-            timer.countdown(5)
+            self.curr_player , self.curr_player_index= circular_queue.next_player()
+            self.curr_player.is_turn = True
+            self.curr_player_socket = self.list_of_clients[self.curr_player_index]
+            #self.curr_player_socket.send(str.encode("your turn"))
+            print(f"current player is {self.curr_player}")
+            self.send_player_info(game)
+            timer.countdown(10)
 
 server = Server()
 

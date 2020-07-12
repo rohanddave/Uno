@@ -5,7 +5,8 @@ class Cq:
         self.list_of_players = list_of_players
     def next_player(self):
         self.pointer+=1
-        return self.list_of_players[self.pointer % len(self.list_of_players)]
+        index = self.pointer % len(self.list_of_players)
+        return self.list_of_players[index] , index
 
 class Timer:
     def countdown(self,time_limit):
