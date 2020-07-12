@@ -1,5 +1,6 @@
 import socket
 
+
 client_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 
 host = "192.168.1.17"

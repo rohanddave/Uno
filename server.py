@@ -1,15 +1,16 @@
 import socket
 from _thread import *
 from game import Game
-from game import Player
+from utilities import Cq
+from utilities import Timer
 import tkinter as tk
-
-#uno = Game()
+import pickle
 
 class Server:
     def __init__(self):
         self.server_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-        self.list_of_clients = []
+        self.list_of_clients = [] #LIST OF CLIENT SOCKETS
+
 
         self.host = "192.168.1.17"
         self.port = 5555
@@ -25,6 +26,7 @@ class Server:
         #player_client = Player(client_socket,addr)
         #uno.add_player(player_client)
         client_socket.send(str.encode("You joined the server!"))
+        client_socket.send(str.encode("message from server"))
         while True:
             try:
                 message = client_socket.recv(1024)
@@ -38,18 +40,33 @@ class Server:
                 break
 
 
-    def broadcast(self,message, client_socket):
+    '''def broadcast(self,message, client_socket):
         for client in self.list_of_clients:
             if client == client_socket:
                 try:
                     client.send(message)
                 except:
                     client.close()
-                    self.list_of_clients.remove(client)
+                    self.list_of_clients.remove(client)'''
+
+    def update_player_cards(self,game):
+        for i in range(0, len(self.list_of_clients)):
+            message = pickle.dumps(game.players[i])
+            print(f"Type: {type(message)} pickle data:{message} END")
+            print(message)
+            self.list_of_clients[i].send(message)
 
     def start_game(self):
         game = Game(self.list_of_clients)
-
+        #self.curr_player_socket = self.list_of_clients[0]
+        circular_queue = Cq(game.players)
+        timer = Timer()
+        while True:  #main game loop
+            curr_player = circular_queue.next_player()
+            curr_player.is_turn = True
+            print(f"current player is {curr_player}")
+            self.update_player_cards(game)
+            timer.countdown(5)
 
 server = Server()
 
