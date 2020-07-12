@@ -62,10 +62,10 @@ class Server:
         circular_queue = Cq(game.players)
         timer = Timer()
         while True:  #main game loop
+            self.update_player_cards(game)
             curr_player = circular_queue.next_player()
             curr_player.is_turn = True
             print(f"current player is {curr_player}")
-            self.update_player_cards(game)
             timer.countdown(5)
 
 server = Server()
