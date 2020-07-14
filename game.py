@@ -1,5 +1,4 @@
 import random
-import _thread
 
 class Card:
     def __init__(self, color, number):
@@ -13,7 +12,6 @@ class Card:
 
 class Player:
     def __init__(self):
-        #self.socket = socket
         self.is_turn = False
         self.cards = []
 
@@ -22,14 +20,15 @@ class Player:
             print(f"Color:{card.color} Number:{card.number}")
 
     def play_card(self,card,game):  # card here is the chosen card
-        if (self.is_turn and card.is_playable(game.curr_card)):
-            self.cards.remove(card)
-            game.curr_card = card
-            print(f"Card Played {card.color} {card.number}")
+        #if (self.is_turn and card.is_playable(game.curr_card)):
+        self.cards.remove(card)
+        game.curr_card = card
+        print(f"Card Played {card.color} {card.number}")
+        return self
 
 
 class Game:
-    def __init__(self,players):
+    def __init__(self):
         self.normal_cards = []
         self.special_cards = []
         self.available_cards = []
@@ -61,9 +60,9 @@ class Game:
 
         #print(len(self.available_cards))
         print("Game initialised!")
-        self.add_players(players)
+        '''self.add_players(self.players)
         self.show_players()
-        self.deal_cards()
+        self.deal_cards()'''
 
     def add_players(self,player_sockets):
         for player_socket in player_sockets:
