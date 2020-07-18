@@ -1,7 +1,7 @@
 import socket
 import pickle
 import time
-
+import random
 
 class Client:
     def __init__(self):
@@ -29,12 +29,29 @@ class Client:
 
                     entry = int(input("Enter Serial Number of Card to be played"))
 
-                    if(unpickled_msg[0].cards[entry].is_playable(unpickled_msg[1].curr_card)):
-                        unpickled_msg[1].curr_card = unpickled_msg[0].cards[entry]
-                        unpickled_msg[0].cards.remove(unpickled_msg[0].cards[entry])
-                        #unpickled_msg[0].play_card(unpickled_msg[0].cards[entry], unpickled_msg[1])
+                    if(entry == 100):
+                        picked_up_card_index = random.randrange(0,len(unpickled_msg[1].available_cards))
+                        unpickled_msg[0].cards.append(unpickled_msg[1].available_cards[picked_up_card_index])
+                        unpickled_msg[1].available_cards.remove(unpickled_msg[1].available_cards[picked_up_card_index])
+
                     else:
-                        print("CANNOT PLAY THIS CARD!")
+                        if(unpickled_msg[0].cards[entry].is_playable(unpickled_msg[1].curr_card)):
+                            unpickled_msg[1].curr_card = unpickled_msg[0].cards[entry]
+                            if (unpickled_msg[1].curr_card.color == 'special'):
+                                while True:
+                                    choice = str(input("ENTER COLOR OF CHOICE"))
+                                    choice.strip()
+                                    colors = ['red','blue','green','yellow']
+                                    if (choice in colors):
+                                        unpickled_msg[1].curr_card.color = choice
+                                        break
+                                    else:
+                                        continue
+
+                            unpickled_msg[0].cards.remove(unpickled_msg[0].cards[entry])
+                            #unpickled_msg[0].play_card(unpickled_msg[0].cards[entry], unpickled_msg[1])
+                        else:
+                            print("CANNOT PLAY THIS CARD!")
 
                 print(f"SENDIG: {unpickled_msg}")
                 #unpickled_msg[0].show_cards()

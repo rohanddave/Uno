@@ -30,7 +30,6 @@ class Server:
             start_new_thread(self.threaded_client, (client_socket, addr))
 
     def threaded_client(self,client_socket ,addr):
-        #message_list = [p1,p2,p3]
         player_obj = game.players[self.list_of_client_sockets.index(client_socket)]
         self.msg = 'init'
 
