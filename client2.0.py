@@ -30,18 +30,20 @@ class Client:
                     entry = int(input("Enter Serial Number of Card to be played"))
 
                     if(unpickled_msg[0].cards[entry].is_playable(unpickled_msg[1].curr_card)):
-                        unpickled_msg[0].cards.remove(unpickled_msg[0].cards[entry])
                         unpickled_msg[1].curr_card = unpickled_msg[0].cards[entry]
+                        unpickled_msg[0].cards.remove(unpickled_msg[0].cards[entry])
                         #unpickled_msg[0].play_card(unpickled_msg[0].cards[entry], unpickled_msg[1])
                     else:
                         print("CANNOT PLAY THIS CARD!")
 
                 print(f"SENDIG: {unpickled_msg}")
+                #unpickled_msg[0].show_cards()
+                #print(f"PLAYER OBJECT FROM GAME OBJECT: {unpickled_msg[1].players[0].show_cards()}")
                 #point_shower = PointShower(unpickled_msg)
                 self.client_socket.send(pickle.dumps(unpickled_msg))  # change this line
                 time.sleep(2)
 
-            except socket.error as e:
+            except Exception as e:
                 print(str(e))
 client = Client()
 client.run()

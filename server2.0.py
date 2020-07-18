@@ -6,10 +6,6 @@ from game import Game
 import time
 import tkinter as tk
 
-'''p1 = Player('rohan', 0)
-p2 = Player('aj',0)
-p3 = Player('suraj',0)'''
-
 class Server:
     def __init__(self):
         self.server_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
@@ -38,18 +34,22 @@ class Server:
         player_obj = game.players[self.list_of_client_sockets.index(client_socket)]
         self.msg = 'init'
 
-
+        count = 0
         while True:
-            message_list = [player_obj, game, self.msg]
+            if(count == 0):
+                message_list = [player_obj, game, self.msg]
             try:
                 client_socket.send(pickle.dumps(message_list))
 
                 message = client_socket.recv(1024 * 4)
                 message_list = pickle.loads(message)
                 print(f"Received: {message_list}")
-                #point_shower = PointShower(message_list)
+
             except Exception as e:
                 print(e)
+            finally:
+                if(count == 0 and self.msg == 'start'):
+                    count += 1
 
             time.sleep(2)
 
