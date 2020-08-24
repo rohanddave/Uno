@@ -35,6 +35,8 @@ class Server:
 
     def start_game(self): # working on tkinter thread
 
+        print(f"PLAYERS: {self.game.players}")
+
         self.queue = Cq(self.game.players)
         self.timer = Timer()
 
@@ -52,6 +54,7 @@ class Server:
                         random_index = random.randrange(0, len(self.message_list[0].available_cards))
                         self.message_list[0].players[(i+1)%len(self.list_of_client_sockets)].cards.append(self.message_list[0].available_cards[random_index])
                         self.message_list[0].available_cards.remove(self.message_list[0].available_cards[random_index])
+
                 self.message_list[1]=i # index = i
                 self.message_list[0].players[i].is_turn = True
                 self.list_of_client_sockets[i].send(pickle.dumps(self.message_list))
