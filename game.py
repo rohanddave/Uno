@@ -5,6 +5,9 @@ class Card:
         self.color = color
         self.number = number
 
+    def __repr__(self):
+        return f"NUMBER:{self.number} COLOR:{self.color}"
+
     def is_playable(self, curr_card ): # curr_card is the topmost card
         if (curr_card.color == self.color or curr_card.number == self.number or self.color == 'special'):
             return True
@@ -64,9 +67,12 @@ class Game:
         self.show_players()
         self.deal_cards()'''
 
-    def add_players(self,player_sockets):
+    def __repr__(self):
+        return f"My Game"
+
+    '''def add_players(self,player_sockets):
         for player_socket in player_sockets:
-            self.players.append(Player())
+            self.players.append(Player())'''
 
     def Diff(self,li1, li2):
         return (list(set(li1) - set(li2)))
