@@ -2,7 +2,7 @@ import socket
 from _thread import *
 import pickle
 from game import Player , Game
-import time
+import random
 import tkinter as tk
 from utilities import Cq
 from utilities import Timer
@@ -14,7 +14,7 @@ class Server:
         self.list_of_client_sockets = []
         self.info_list = [] # [ player_obj , game , msg ]
 
-        self.host = "192.168.1.17"
+        self.host = socket.gethostbyname(socket.gethostname())
         self.port = 5555
 
         self.server_socket.bind((self.host,self.port))
@@ -46,10 +46,15 @@ class Server:
             self.message_list = [self.game,index]  # [game_obj , index of player]
             print(self.message_list[0].curr_card)
             for i in range(0,len(self.list_of_client_sockets)):
+
+                if(self.message_list[0].curr_card.number == 11): # for draw 2
+                    for i in range(0,2):
+                        random_index = random.randrange(0, len(self.message_list[0].available_cards))
+                        self.message_list[0].players[(i+1)%len(self.list_of_client_sockets)].cards.append(self.message_list[0].available_cards[random_index])
+                        self.message_list[0].available_cards.remove(self.message_list[0].available_cards[random_index])
                 self.message_list[1]=i # index = i
                 self.message_list[0].players[i].is_turn = True
                 self.list_of_client_sockets[i].send(pickle.dumps(self.message_list))
-                print("sent")
                 try:
                     recieved_pickled_message = self.list_of_client_sockets[i].recv(1024 * 4)
                     self.message_list = pickle.loads(recieved_pickled_message)
