@@ -7,6 +7,7 @@ class Client:
     def __init__(self):
         self.client_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 
+        self.name = input("Enter Name: ")
         self.host = input("Enter host IP Address")
         self.port = 5555
 
@@ -19,6 +20,9 @@ class Client:
 
 
         self.run()
+
+    def __repr__(self):
+        return f"{self.name}"
 
     def run(self):
         while True:
@@ -37,6 +41,7 @@ class Client:
                     if(entry == 100): # pick up a card
                         picked_up_card_index = random.randrange(0,len(unpickled_msg[0].available_cards))
                         unpickled_msg[0].players[unpickled_msg[1]].cards.append(unpickled_msg[0].available_cards[picked_up_card_index])
+                        print("PICKED UP: ",unpickled_msg[0].available_cards[picked_up_card_index])
                         unpickled_msg[0].available_cards.remove(unpickled_msg[0].available_cards[picked_up_card_index])
 
                     else:
@@ -52,7 +57,7 @@ class Client:
                                         break
                                     else:
                                         continue
-
+                            print(f"Played:- {unpickled_msg[0].players[unpickled_msg[1]].cards[entry]}")
                             unpickled_msg[0].players[unpickled_msg[1]].cards.remove(unpickled_msg[0].players[unpickled_msg[1]].cards[entry])
                         else:
                             print("CANNOT PLAY THIS CARD!")
