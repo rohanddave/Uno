@@ -18,47 +18,46 @@ class Client:
         while True:
             try:
                 received_msg = self.client_socket.recv(1024 * 4)
-                unpickled_msg = pickle.loads(received_msg)
-                if (unpickled_msg[2] == 'start'):
-                    print(f"RECEIVED: {unpickled_msg}")
+                unpickled_msg = pickle.loads(received_msg)  # [game obj , index of player obj]
+                if (unpickled_msg[0].players[unpickled_msg[1]].is_turn == True):
+                    #print("YOUR TURN!!!!!!!!!!!!!!!!!!!!!")
+                    #print(f"RECEIVED: {unpickled_msg}")
 
                     print("Player Cards:")
-                    unpickled_msg[0].show_cards() #displays cards of player
+                    unpickled_msg[0].players[unpickled_msg[1]].show_cards() #displays cards of player
 
-                    print(f"Current Card:- Color: {unpickled_msg[1].curr_card.color} Number: {unpickled_msg[1].curr_card.number}") #made a change here
+                    print(f"Current Card:- Color: {unpickled_msg[0].curr_card.color} Number: {unpickled_msg[0].curr_card.number}") #made a change here
 
                     entry = int(input("Enter Serial Number of Card to be played"))
 
-                    if(entry == 100):
-                        picked_up_card_index = random.randrange(0,len(unpickled_msg[1].available_cards))
-                        unpickled_msg[0].cards.append(unpickled_msg[1].available_cards[picked_up_card_index])
-                        unpickled_msg[1].available_cards.remove(unpickled_msg[1].available_cards[picked_up_card_index])
+                    if(entry == 100): # pick up a card
+                        picked_up_card_index = random.randrange(0,len(unpickled_msg[0].available_cards))
+                        unpickled_msg[0].players[unpickled_msg[1]].cards.append(unpickled_msg[0].available_cards[picked_up_card_index])
+                        unpickled_msg[0].available_cards.remove(unpickled_msg[0].available_cards[picked_up_card_index])
 
                     else:
-                        if(unpickled_msg[0].cards[entry].is_playable(unpickled_msg[1].curr_card)):
-                            unpickled_msg[1].curr_card = unpickled_msg[0].cards[entry]
-                            if (unpickled_msg[1].curr_card.color == 'special'):
+                        if(unpickled_msg[0].players[unpickled_msg[1]].cards[entry].is_playable(unpickled_msg[0].curr_card)):
+                            unpickled_msg[0].curr_card = unpickled_msg[0].players[unpickled_msg[1]].cards[entry]
+                            if (unpickled_msg[0].curr_card.color == 'special'):
                                 while True:
                                     choice = str(input("ENTER COLOR OF CHOICE"))
                                     choice.strip()
                                     colors = ['red','blue','green','yellow']
                                     if (choice in colors):
-                                        unpickled_msg[1].curr_card.color = choice
+                                        unpickled_msg[0].curr_card.color = choice
                                         break
                                     else:
                                         continue
 
-                            unpickled_msg[0].cards.remove(unpickled_msg[0].cards[entry])
+                            unpickled_msg[0].players[unpickled_msg[1]].cards.remove(unpickled_msg[0].players[unpickled_msg[1]].cards[entry])
+                            print("line 1")
                             #unpickled_msg[0].play_card(unpickled_msg[0].cards[entry], unpickled_msg[1])
                         else:
                             print("CANNOT PLAY THIS CARD!")
-
-                print(f"SENDIG: {unpickled_msg}")
-                #unpickled_msg[0].show_cards()
-                #print(f"PLAYER OBJECT FROM GAME OBJECT: {unpickled_msg[1].players[0].show_cards()}")
-                #point_shower = PointShower(unpickled_msg)
-                self.client_socket.send(pickle.dumps(unpickled_msg))  # change this line
-                time.sleep(2)
+                    unpickled_msg[0].players[unpickled_msg[1]].is_turn = False
+                    print(f"SENDING: {unpickled_msg}")
+                    self.client_socket.send(pickle.dumps(unpickled_msg))  # change this line
+                    time.sleep(2)
 
             except Exception as e:
                 print(str(e))
