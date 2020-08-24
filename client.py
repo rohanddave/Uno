@@ -1,72 +1,79 @@
 import socket
+from _thread import *
 import pickle
-import time
+from game import Player , Game
 import random
+import tkinter as tk
+from utilities import Cq
+from utilities import Timer
 
-class Client:
+
+class Server:
     def __init__(self):
-        self.client_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+        self.server_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+        self.list_of_client_sockets = []
+        self.info_list = [] # [ player_obj , game , msg ]
 
-        self.name = input("Enter Name: ")
-        self.host = input("Enter host IP Address")
+        self.host = socket.gethostbyname(socket.gethostname())
         self.port = 5555
 
-        try:
-            self.client_socket.connect((self.host,self.port))
-            print("Connected Successfully! Waiting for Server to Start Game ")
-        except Exception as e:
-            print(e)
-            return
+        self.server_socket.bind((self.host,self.port))
 
+        self.server_socket.listen(4)
 
-        self.run()
+        self.message_list = []
 
-    def __repr__(self):
-        return f"{self.name}"
+        self.game = Game()
 
     def run(self):
         while True:
-            try:
-                received_msg = self.client_socket.recv(1024 * 4)
-                unpickled_msg = pickle.loads(received_msg)  # [game obj , index of player obj]
-                if (unpickled_msg[0].players[unpickled_msg[1]].is_turn == True):
+            print("listening for connections....")
+            client_socket, addr = self.server_socket.accept()
+            print(f"{addr[0]} connected to server!")
+            self.list_of_client_sockets.append(client_socket)
+            self.game.players.append(Player())
 
-                    print("Player Cards:")
-                    unpickled_msg[0].players[unpickled_msg[1]].show_cards() #displays cards of player
+    def start_game(self): # working on tkinter thread
 
-                    print(f"Current Card:- Color: {unpickled_msg[0].curr_card.color} Number: {unpickled_msg[0].curr_card.number}") #made a change here
+        print(f"PLAYERS: {self.game.players}")
 
-                    entry = int(input("Enter Serial Number of Card to be played"))
+        self.queue = Cq(self.game.players)
+        self.timer = Timer()
 
-                    if(entry == 100): # pick up a card
-                        picked_up_card_index = random.randrange(0,len(unpickled_msg[0].available_cards))
-                        unpickled_msg[0].players[unpickled_msg[1]].cards.append(unpickled_msg[0].available_cards[picked_up_card_index])
-                        print("PICKED UP: ",unpickled_msg[0].available_cards[picked_up_card_index])
-                        unpickled_msg[0].available_cards.remove(unpickled_msg[0].available_cards[picked_up_card_index])
+        self.game.deal_cards()
 
-                    else:
-                        if(unpickled_msg[0].players[unpickled_msg[1]].cards[entry].is_playable(unpickled_msg[0].curr_card)):
-                            unpickled_msg[0].curr_card = unpickled_msg[0].players[unpickled_msg[1]].cards[entry]
-                            if (unpickled_msg[0].curr_card.color == 'special'):
-                                while True:
-                                    choice = str(input("ENTER COLOR OF CHOICE"))
-                                    choice.strip()
-                                    colors = ['red','blue','green','yellow']
-                                    if (choice in colors):
-                                        unpickled_msg[0].curr_card.color = choice
-                                        break
-                                    else:
-                                        continue
-                            print(f"Played:- {unpickled_msg[0].players[unpickled_msg[1]].cards[entry]}")
-                            unpickled_msg[0].players[unpickled_msg[1]].cards.remove(unpickled_msg[0].players[unpickled_msg[1]].cards[entry])
-                        else:
-                            print("CANNOT PLAY THIS CARD!")
-                    unpickled_msg[0].players[unpickled_msg[1]].is_turn = False
-                    print(f"SENDING: {unpickled_msg}")
-                    self.client_socket.send(pickle.dumps(unpickled_msg))  # change this line
-                    time.sleep(2)
+        self.msg = 'start'
+        index = -1
+        while True:  # everything that the server does
+            self.message_list = [self.game,index]  # [game_obj , index of player]
+            print(self.message_list[0].curr_card)
+            for i in range(0,len(self.list_of_client_sockets)):
 
-            except Exception as e:
-                print(str(e))
-client = Client()
-client.run()
+                if(self.message_list[0].curr_card.number == 11): # for draw 2
+                    for i in range(0,2):
+                        random_index = random.randrange(0, len(self.message_list[0].available_cards))
+                        self.message_list[0].players[(i+1)%len(self.list_of_client_sockets)].cards.append(self.message_list[0].available_cards[random_index])
+                        self.message_list[0].available_cards.remove(self.message_list[0].available_cards[random_index])
+
+                self.message_list[1]=i # index = i
+                self.message_list[0].players[i].is_turn = True
+                self.list_of_client_sockets[i].send(pickle.dumps(self.message_list))
+                try:
+                    recieved_pickled_message = self.list_of_client_sockets[i].recv(1024 * 4)
+                    self.message_list = pickle.loads(recieved_pickled_message)
+                except:
+                    pass
+            self.game = self.message_list[0]
+            index = -1
+
+server = Server()
+
+def tkinter():
+    window = tk.Tk()
+    b1 = tk.Button(window , text = "start",command = server.start_game)
+    b1.pack()
+    window.mainloop()
+
+start_new_thread(tkinter , ())
+
+server.run()
