@@ -63,16 +63,10 @@ class Game:
 
         #print(len(self.available_cards))
         print("Game initialised!")
-        '''self.add_players(self.players)
-        self.show_players()
-        self.deal_cards()'''
 
     def __repr__(self):
         return f"My Game"
 
-    '''def add_players(self,player_sockets):
-        for player_socket in player_sockets:
-            self.players.append(Player())'''
 
     def Diff(self,li1, li2):
         return (list(set(li1) - set(li2)))
