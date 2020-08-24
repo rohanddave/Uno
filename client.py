@@ -7,10 +7,16 @@ class Client:
     def __init__(self):
         self.client_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 
-        self.host = "192.168.1.17"
+        self.host = input("Enter host IP Address")
         self.port = 5555
 
-        self.client_socket.connect((self.host,self.port))
+        try:
+            self.client_socket.connect((self.host,self.port))
+            print("Connected Successfully! Waiting for Server to Start Game ")
+        except Exception as e:
+            print(e)
+            return
+
 
         self.run()
 
@@ -20,8 +26,6 @@ class Client:
                 received_msg = self.client_socket.recv(1024 * 4)
                 unpickled_msg = pickle.loads(received_msg)  # [game obj , index of player obj]
                 if (unpickled_msg[0].players[unpickled_msg[1]].is_turn == True):
-                    #print("YOUR TURN!!!!!!!!!!!!!!!!!!!!!")
-                    #print(f"RECEIVED: {unpickled_msg}")
 
                     print("Player Cards:")
                     unpickled_msg[0].players[unpickled_msg[1]].show_cards() #displays cards of player
@@ -50,8 +54,6 @@ class Client:
                                         continue
 
                             unpickled_msg[0].players[unpickled_msg[1]].cards.remove(unpickled_msg[0].players[unpickled_msg[1]].cards[entry])
-                            print("line 1")
-                            #unpickled_msg[0].play_card(unpickled_msg[0].cards[entry], unpickled_msg[1])
                         else:
                             print("CANNOT PLAY THIS CARD!")
                     unpickled_msg[0].players[unpickled_msg[1]].is_turn = False
