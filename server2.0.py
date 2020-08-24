@@ -1,10 +1,12 @@
 import socket
 from _thread import *
 import pickle
-from game import Player
-from game import Game
+from game import Player , Game
 import time
 import tkinter as tk
+from utilities import Cq
+from utilities import Timer
+
 
 class Server:
     def __init__(self):
@@ -19,6 +21,9 @@ class Server:
 
         self.server_socket.listen(4)
 
+        self.message_list = []
+
+        self.game = Game()
 
     def run(self):
         while True:
@@ -26,39 +31,35 @@ class Server:
             client_socket, addr = self.server_socket.accept()
             print(f"{addr[0]} connected to server!")
             self.list_of_client_sockets.append(client_socket)
-            game.players.append(Player())
-            start_new_thread(self.threaded_client, (client_socket, addr))
+            self.game.players.append(Player())
 
-    def threaded_client(self,client_socket ,addr):
-        player_obj = game.players[self.list_of_client_sockets.index(client_socket)]
-        self.msg = 'init'
+    def start_game(self): # working on tkinter thread
 
-        count = 0
-        while True:
-            if(count == 0):
-                message_list = [player_obj, game, self.msg]
-            try:
-                client_socket.send(pickle.dumps(message_list))
+        self.queue = Cq(self.game.players)
+        self.timer = Timer()
 
-                message = client_socket.recv(1024 * 4)
-                message_list = pickle.loads(message)
-                print(f"Received: {message_list}")
+        self.game.deal_cards()
 
-            except Exception as e:
-                print(e)
-            finally:
-                if(count == 0 and self.msg == 'start'):
-                    count += 1
-
-            time.sleep(2)
-
-    def start_game(self):
-        game.show_players()
-        game.deal_cards()
         self.msg = 'start'
+        index = -1
+        while True:  # everything that the server does
+            self.message_list = [self.game,index]  # [game_obj , index of player]
+            print(self.message_list[0].curr_card)
+            for i in range(0,len(self.list_of_client_sockets)):
+                self.message_list[1]=i # index = i
+                self.message_list[0].players[i].is_turn = True
+                self.list_of_client_sockets[i].send(pickle.dumps(self.message_list))
+                print("sent")
+                try:
+                    recieved_pickled_message = self.list_of_client_sockets[i].recv(1024 * 4)
+                    self.message_list = pickle.loads(recieved_pickled_message)
+                except:
+                    pass
+            self.game = self.message_list[0]
+            index = -1
 
 server = Server()
-game = Game()
+
 def tkinter():
     window = tk.Tk()
     b1 = tk.Button(window , text = "start",command = server.start_game)
